@@ -1,1 +1,3 @@
-Buat skrip validasi endpoint hapus [DEL]
+Buat skrip validasi postman endpoint hapus [DEL]
+status kode 200 berhasil
+status kode 400 gagal

@@ -11,6 +11,7 @@ This Bash script is used to generate automated scripts (Postman test or Node.js 
 **Two output modes:**
 - Postman (with `pm.test`, `pm.expect`)
 - Node.js (with `axios` or `fetch`)
+
 **Automatic script style detection**
 **Automatic API key handling** — read from `.profile` or manually input
 **Automatic log history** — only saves the last 100 entries

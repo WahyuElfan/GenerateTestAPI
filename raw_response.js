@@ -1,37 +1,46 @@
-pm.test("Status code is 204 No Content or 200 OK", function () {
-    pm.expect(pm.response.code).to.be.oneOf([204, 200]); // Accept both 204 and 200 for success
-});
-pm.test("Response time is less than 200ms", function () {
-    pm.expect(pm.response.responseTime).to.be.below(200);
-});
-pm.test("Content-Type is present", function () {
-    pm.expect(pm.response.headers.has("Content-Type")).to.be.true;
-});
-// Validasi tambahan jika response body diharapkan (misalnya jika status 200 OK)
-if (pm.response.code === 200) {
-    pm.test("Response body is not empty", function () {
-        pm.expect(pm.response.text()).to.not.be.empty;
+// Mendapatkan status kode dari respons
+let statusCode = pm.response.statusCode;
+// Validasi status kode 200 (Berhasil)
+if (statusCode === 200) {
+    pm.test("Berhasil Menghapus: Status kode adalah 200", () => {
+        pm.response.to.have.status(200);
     });
-    pm.test("Response body contains success message", function () {
+    // Tambahkan validasi tambahan berdasarkan body response jika diperlukan
+    // Contoh: Memastikan respons body memiliki properti "message" dengan nilai tertentu
+    // pm.expect(pm.response.json().message).to.eql("Data berhasil dihapus");
+}
+// Validasi status kode 400 (Gagal)
+else if (statusCode === 400) {
+    pm.test("Gagal Menghapus: Status kode adalah 400", () => {
+        pm.response.to.have.status(400);
+    });
+    // Validasi tambahan untuk respons 400 (sangat penting!)
+    // Ini membantu Anda memastikan mengapa permintaan itu gagal
+    pm.test("Respons 400 mengandung pesan kesalahan yang spesifik", () => {
         const responseJson = pm.response.json();
-        pm.expect(responseJson).to.have.property("message");
-        pm.expect(responseJson.message).to.eql("User deleted successfully"); // Ganti dengan pesan sukses yang sesuai
+        // Periksa apakah respons memiliki properti "error"
+        pm.expect(responseJson).to.have.property('error');
+        // Contoh: Memastikan pesan kesalahan sesuai dengan yang diharapkan
+        // Anda perlu menyesuaikan ini berdasarkan struktur respons API Anda
+        pm.expect(responseJson.error).to.be.a('string');
+        pm.expect(responseJson.error).to.not.be.empty; // Memastikan pesan kesalahan tidak kosong
+        //Contoh lain, cek error detail jika ada
+        //if(responseJson.hasOwnProperty('details')){
+        //    pm.expect(responseJson.details).to.be.an('array').that.is.not.empty;
+        //}
     });
 }
-// Negative Test: Cek jika ID tidak valid
-pm.test("Negative Test: Check for 404 Not Found when deleting non-existent user", function() {
-    pm.environment.set("invalidUserId", "9999"); //Set ID invalid (contoh)
-    pm.sendRequest({
-        url: pm.environment.get("baseUrl") + "/users/" + pm.environment.get("invalidUserId"), // Gabungkan base URL dan endpoint
-        method: 'DELETE'
-    }, function (err, response) {
-        if (err) {
-            pm.expect.fail("Error in negative test: " + err);
-        } else {
-            pm.expect(response.code).to.eql(404); // Memastikan kode status 404
-            const responseJson = response.json();
-            pm.expect(responseJson).to.have.property("message");
-            pm.expect(responseJson.message).to.eql("User not found"); // Ganti dengan pesan error yang sesuai
-        }
+//Status kode yang tidak diharapkan
+else {
+     pm.test("Status code tidak diharapkan: " + statusCode, () => {
+        pm.expect.fail("Status code " + statusCode + " tidak sesuai dengan yang diharapkan (200 atau 400).");
     });
+}
+pm.test("Berhasil Menghapus: Pesan sukses diterima", () => {
+    pm.expect(pm.response.json().message).to.eql("Data berhasil dihapus");
+});
+pm.test("Gagal Menghapus: Pesan kesalahan spesifik diterima", () => {
+    const responseJson = pm.response.json();
+    pm.expect(responseJson.error).to.eql("ID tidak valid");
+    pm.expect(responseJson.code).to.eql(123); // contoh kode error
 });
